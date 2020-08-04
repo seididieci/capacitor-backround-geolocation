@@ -26,7 +26,7 @@ import com.getcapacitor.PluginMethod;
     Manifest.permission.FOREGROUND_SERVICE,
     Manifest.permission.ACCESS_FINE_LOCATION,
   },
-  permissionRequestCode = 0xFFAABB // Used in checking for runtime permissions.
+  permissionRequestCode = 86 // Used in checking for runtime permissions.
 )
 public class BackgroundGeolocation extends Plugin {
 

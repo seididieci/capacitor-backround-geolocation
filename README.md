@@ -43,19 +43,23 @@ npx cap sync
 import { Plugins } from '@capacitor/core';
 const { BackgroundGeolocation } = Plugins;
 
-BackgroundGeolocation.addListener("onLocation", (location: any) => {
-      console.log("Got location", location);
-      // Put your logih here.
-    });
+import { BgLocationEvent, BgGeolocationAccuracy } from "capacitor-background-geolocation";
 
 BackgroundGeolocation.initialize({
   notificationText: "Your app is running, tap to open.",
   notificationTitle: "App Running",
   updateInteval: 10000,
+  requestedAccuracy: BgGeolocationAccuracy.HIGH_ACCURACY,
   // Small icon has to be in 'drawable' resources of your app
   // if you does not provide it or it is not found a fallback icon will be used.
   smallIcon: "ic_small_icon",
 });
+
+BackgroundGeolocation.addListener("onLocation", (location: BgLocationEvent) => {
+  console.log("Got new location", location);
+  // Put your logic here.
+});
+
 ```
 
 ### Android
