@@ -27,13 +27,9 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
   }
 
   addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle {
-    const thisRef = this;
-
-    const watchBindFunc = listenerFunc.bind(thisRef, {} as BgLocationEvent);
-
     if (eventName.localeCompare('onLocation') === 0) {
       const watchId = window.navigator.geolocation.watchPosition((pos) => {
-        watchBindFunc({
+        listenerFunc({
           altitude: pos.coords.altitude,
           altitudeAccuracy: pos.coords.altitudeAccuracy,
           bearing: 0,
