@@ -30,13 +30,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 public class LocationUpdatesService extends Service {
-  private static final String PACKAGE_NAME = "com.example.app.bglocation";
-  private static final String TAG =
-    LocationUpdatesService.class.getSimpleName();
+  private static final String PACKAGE_NAME = "com.getcapacitor.community.bglocation";
+  private static final String TAG = LocationUpdatesService.class.getSimpleName();
   private static final String CHANNEL_ID = "bg_location_channel";
+  private static final int NOTIFICATION_ID = 0xFEDEC;
 
   static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
-
   static final String ACTION_BROADCAST = PACKAGE_NAME + ".broadcast";
   static final String ACTION_START = PACKAGE_NAME + ".startservice";
   static final String ACTION_STOP = PACKAGE_NAME + ".stopservice";
@@ -46,24 +45,20 @@ public class LocationUpdatesService extends Service {
 
   private final IBinder mBinder = new LocalBinder();
 
-  private static final int NOTIFICATION_ID = 0xFEDEC;
-
   private NotificationManager mNotificationManager;
-
   private LocationRequest mLocationRequest;
   private FusedLocationProviderClient mFusedLocationClient;
   private LocationCallback mLocationCallback;
-
   private Handler mServiceHandler;
-
   private Location mLocation;
 
+  // Configuration values
   private int updateInterval = 10000;
-
   private String notificationTitle;
   private String notificationText;
   private String mainActivityName;
   private int smallIconResourceID = R.drawable.ic_baseline_location_on_24;
+  private int requestedAccuracy = LocationRequest.PRIORITY_HIGH_ACCURACY;
 
   public LocationUpdatesService() {
     notificationTitle = "App is running.";
@@ -122,8 +117,10 @@ public class LocationUpdatesService extends Service {
             requestLocationUpdates();
             break;
           case ACTION_GO_FOREGROUND:
-            Log.d(TAG, "Location service going foreground.");
-            startForeground(NOTIFICATION_ID, getNotification());
+            if (!serviceIsRunningInForeground(this)) {
+              Log.d(TAG, "Location service going foreground.");
+              startForeground(NOTIFICATION_ID, getNotification());
+            }
             break;
           case ACTION_GO_BACKGROUND:
             Log.d(TAG, "Location service going background.");
@@ -142,9 +139,10 @@ public class LocationUpdatesService extends Service {
             String newTitle = intent.getStringExtra("notificationTitle");
             String newText = intent.getStringExtra("notificationText");
             int newSmallIcon = intent.getIntExtra("smallIcon", R.drawable.ic_baseline_location_on_24);
+            int newAccuracy = intent.getIntExtra("requestedAccuracy", requestedAccuracy);
 
             // Verifying what changes
-            boolean toRestart = newInterval != updateInterval;
+            boolean toRestart = newInterval != updateInterval || newAccuracy != requestedAccuracy;
             boolean updateNotif = (!newTitle.isEmpty() && newTitle != notificationTitle) ||
                                   (!newText.isEmpty() && newText != notificationText) ||
                                   (newSmallIcon > 0 && newSmallIcon != smallIconResourceID);
@@ -152,20 +150,24 @@ public class LocationUpdatesService extends Service {
             notificationText = newText;
             notificationTitle = newTitle;
             updateInterval = newInterval;
-            smallIconResourceID = newSmallIcon;
+            requestedAccuracy = newAccuracy;
+
+            if (newSmallIcon > 0)
+              smallIconResourceID = newSmallIcon;
 
             // Restarting service with new options
             if (toRestart && Utils.isRequestingLocation(this)) {
               boolean foreground = serviceIsRunningInForeground(this);
-              if (foreground) stopForeground(true);
+              if (foreground)
+                stopForeground(true);
 
               removeLocationUpdates();
+              createLocationRequest();
               requestLocationUpdates();
 
-              if (foreground) startForeground(
-                NOTIFICATION_ID,
-                getNotification()
-              );
+              if (foreground)
+                startForeground(NOTIFICATION_ID, getNotification());
+
             } else if (updateNotif && serviceIsRunningInForeground(this)) {
               mNotificationManager.notify(NOTIFICATION_ID, getNotification());
             }
@@ -209,17 +211,10 @@ public class LocationUpdatesService extends Service {
       new Intent(getApplicationContext(), LocationUpdatesService.class)
     );
     try {
-      mFusedLocationClient.requestLocationUpdates(
-        mLocationRequest,
-        mLocationCallback,
-        Looper.myLooper()
-      );
+      mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
     } catch (SecurityException unlikely) {
       Utils.unsetRequestingLocation(this);
-      Log.e(
-        TAG,
-        "Lost location permission. Could not request updates. " + unlikely
-      );
+      Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
     }
   }
 
@@ -244,14 +239,12 @@ public class LocationUpdatesService extends Service {
       intent = new Intent(this,  Class.forName(mainActivityName));
     } catch (Exception ex) {
       intent = new Intent(this,  getApplication().getClass());
+      Log.w(TAG, ex.getLocalizedMessage());
     }
     intent.setAction(Intent.ACTION_VIEW);
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-    NotificationCompat.Builder builder = new NotificationCompat.Builder(
-      this,
-      CHANNEL_ID
-    )
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
       .setContentText(notificationText)
       .setContentTitle(notificationTitle)
       .setOngoing(true)
@@ -275,6 +268,7 @@ public class LocationUpdatesService extends Service {
             public void onComplete(@NonNull Task<Location> task) {
               if (task.isSuccessful() && task.getResult() != null) {
                 mLocation = task.getResult();
+                onNewLocation(mLocation);
               } else {
                 Log.w(TAG, "Failed to get location.");
               }
@@ -289,8 +283,6 @@ public class LocationUpdatesService extends Service {
   private void onNewLocation(Location location) {
     Log.d(TAG, "New location: " + location);
 
-    mLocation = location;
-
     // Notify anyone listening for broadcasts about the new location.
     Intent intent = new Intent(ACTION_BROADCAST);
     intent.putExtra(EXTRA_LOCATION, location);
@@ -303,12 +295,10 @@ public class LocationUpdatesService extends Service {
     mLocationRequest = new LocationRequest();
     mLocationRequest.setInterval(updateInterval);
     mLocationRequest.setFastestInterval(updateInterval / 2);
-    // TODO: Add configuration for accuracy
-    mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    mLocationRequest.setPriority(requestedAccuracy);
   }
 
   public class LocalBinder extends Binder {
-
     LocationUpdatesService getService() {
       return LocationUpdatesService.this;
     }

@@ -22,22 +22,18 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 
 @NativePlugin(
-  permissions={
+  permissions = {
     Manifest.permission.FOREGROUND_SERVICE,
-    Manifest.permission.INSTANT_APP_FOREGROUND_SERVICE,
     Manifest.permission.ACCESS_FINE_LOCATION,
-  }
+  },
+  permissionRequestCode = 0xFFAABB // Used in checking for runtime permissions.
 )
 public class BackgroundGeolocation extends Plugin {
-  // Used in checking for runtime permissions.
-  private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+
   private static final String TAG = "BackgroundGeolocation";
 
   // The BroadcastReceiver used to listen from broadcasts from the service.
   private GeolocationReceiver receiver;
-
-  // A reference to the service used to get location updates.
-  private LocationUpdatesService mService = null;
 
   // Tracks the bound state of the service.
   private boolean mBound = false;
@@ -87,34 +83,22 @@ public class BackgroundGeolocation extends Plugin {
 
   @Override
   protected void handleRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    super.handleRequestPermissionsResult(
-      requestCode,
-      permissions,
-      grantResults
-    );
+    super.handleRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    Log.i(TAG, "onRequestPermissionResult");
-
-    PluginCall savedCall = getSavedCall();
-    if (savedCall == null) {
-      Log.e(TAG, "No stored plugin call for permissions request result");
-      return;
-    }
-
-    if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
-      if (grantResults.length <= 0) {
-        // If user interaction was interrupted, the permission request is cancelled and you
-        // receive empty arrays.
-        Log.i(TAG, "User interaction was cancelled.");
-      } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        // Permission was granted.
-        mService.requestLocationUpdates();
-      } else {
-        // Permission denied.
-        savedCall.error("User denied permission");
+    for(int result : grantResults) {
+      if (result == PackageManager.PERMISSION_DENIED) {
         return;
       }
     }
+
+    // Permission was granted.
+    Log.d(TAG, "User granted permissions, starting service...");
+
+    // Actual start
+    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.setAction(LocationUpdatesService.ACTION_START);
+    getContext().startService(intent);
+
   }
 
   /**
@@ -164,19 +148,13 @@ public class BackgroundGeolocation extends Plugin {
 
     receiver = new GeolocationReceiver();
 
-    // Check that the user hasn't revoked permissions by going to Settings.
-    if (Utils.isRequestingLocation(getContext())) {
-      if (!hasDefinedPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-        pluginRequestPermission(
-          Manifest.permission.ACCESS_FINE_LOCATION,
-          REQUEST_PERMISSIONS_REQUEST_CODE
-        );
-      }
-    }
+    // Ensure we have permissions
+    pluginRequestAllPermissions();
 
     // Configuring
     Intent configIntent = new Intent(getContext(), LocationUpdatesService.class);
     configIntent.setAction(LocationUpdatesService.ACTION_CONFIGURE);
+    configIntent.putExtra("mainActivity", getBridge().getActivity().getClass().getCanonicalName());
     if (call.hasOption("notificationTitle"))
       configIntent.putExtra("notificationTitle", call.getString("notificationTitle"));
     if (call.hasOption("notificationText"))
@@ -185,15 +163,9 @@ public class BackgroundGeolocation extends Plugin {
       configIntent.putExtra("updateInterval", call.getInt("updateInterval"));
     if (call.hasOption("smallIcon"))
       configIntent.putExtra("smallIcon", getContext().getResources().getIdentifier(call.getString("smallIcon"), "drawable", getContext().getApplicationContext().getPackageName()));
+    if (call.hasOption("requestedAccuracy"))
+      configIntent.putExtra("requestedAccuracy", call.getInt("requestedAccuracy"));
     getContext().startService(configIntent);
-
-    // Actual start
-    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
-    intent.setAction(LocationUpdatesService.ACTION_START);
-    intent.putExtra("mainActivity", getBridge().getActivity().getClass().getCanonicalName());
-
-    // Starting the service
-    getContext().startService(intent);
 
     // Bind to the service. If the service is in foreground mode, this signals to the service
     // that since this activity is in the foreground, the service can exit foreground mode.

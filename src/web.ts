@@ -1,5 +1,5 @@
 import { WebPlugin, ListenerCallback, PluginListenerHandle } from '@capacitor/core';
-import { BackgroundGeolocationPlugin, BgGeolocationOptions, BgLocationEvent } from './definitions';
+import { BackgroundGeolocationPlugin, BgGeolocationOptions, BgLocationEvent, BgGeolocationAccuracy } from './definitions';
 
 export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeolocationPlugin {
   constructor() {
@@ -10,10 +10,12 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
   }
 
   private updateInterval: number = 10000;
+  private requestedAccuracy: BgGeolocationAccuracy = BgGeolocationAccuracy.HIGH_ACCURACY;
 
   async initialize(options: BgGeolocationOptions): Promise<void> {
     // Nothing to do on web
     this.updateInterval = options.updateInteval;
+    this.requestedAccuracy = options.requestedAccuracy;
   }
 
   async goForeground(): Promise<void> {
@@ -47,7 +49,8 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
       }, (err) => {
         console.warn(err);
       }, {
-        enableHighAccuracy: true,
+        enableHighAccuracy: this.requestedAccuracy === BgGeolocationAccuracy.BALANCED_POWER_ACCURACY ||
+                            this.requestedAccuracy === BgGeolocationAccuracy.HIGH_ACCURACY,
         timeout: this.updateInterval,
         maximumAge: 0,
       });
