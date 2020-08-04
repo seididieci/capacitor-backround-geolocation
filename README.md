@@ -4,6 +4,8 @@
   Capacitor plugin for enabling bacground geolocation service
 </p>
 
+[![npm version](https://badge.fury.io/js/capacitor-background-geolocation.svg)](https://badge.fury.io/js/capacitor-background-geolocation)
+
 ## Maintainers
 
 | Maintainer      | GitHub
