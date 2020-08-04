@@ -1,10 +1,13 @@
 {
   "name": "capacitor-background-geolocation",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A native plugin to get geolocation updates also when app is in background",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "lint": "npm run prettier -- --check && npm run swiftlint -- lint",
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
@@ -23,6 +26,7 @@
     "@ionic/prettier-config": "^1.0.0",
     "@ionic/swiftlint-config": "^1.0.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
+    "lodash": "^4.17.19",
     "prettier": "^2.0.5",
     "prettier-plugin-java": "^0.8.0",
     "rimraf": "^3.0.2",
@@ -42,7 +46,9 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "geolocation",
+    "background"
   ],
   "capacitor": {
     "ios": {

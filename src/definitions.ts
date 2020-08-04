@@ -1,3 +1,5 @@
+import { ListenerCallback, PluginListenerHandle } from "@capacitor/core";
+
 declare module '@capacitor/core' {
   interface PluginRegistry {
     BackgroundGeolocation: BackgroundGeolocationPlugin;
@@ -7,13 +9,15 @@ declare module '@capacitor/core' {
 export interface BgGeolocationOptions {
   notificationTitle: string;
   notificationText: string;
-  updateInteval : number;
+  updateInteval: number;
+  smallIcon: string;
 }
 
 export interface BackgroundGeolocationPlugin {
   initialize(options: BgGeolocationOptions): Promise<void>;
   goForeground(): Promise<void>;
   stopForeground(): Promise<void>;
+  addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle;
 }
 
 
