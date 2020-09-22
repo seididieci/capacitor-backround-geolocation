@@ -239,7 +239,8 @@ public class LocationUpdatesService extends Service {
       intent = new Intent(this,  Class.forName(mainActivityName));
     } catch (Exception ex) {
       intent = new Intent(this,  getApplication().getClass());
-      Log.w(TAG, ex.getLocalizedMessage());
+      Log.w(TAG, "Cannot create main activity Intent: " + ex.getLocalizedMessage());
+      Log.d(TAG, "Stack: " + Log.getStackTraceString(ex));
     }
     intent.setAction(Intent.ACTION_VIEW);
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
