@@ -105,6 +105,12 @@ public class BackgroundGeolocation extends Plugin {
       }
     }
 
+    // Let frontend know about permissions.
+    JSObject ret = new JSObject();
+    ret.put("foreground", this.foregroundPermission);
+    ret.put("fineLocation", this.locationPermission);
+    notifyListeners("onPermissions", ret);
+
     // If we have permissions we can start the service.
     if (this.locationPermission) {
       // Permission was granted.
@@ -153,6 +159,14 @@ public class BackgroundGeolocation extends Plugin {
         notifyListeners("onLocation", ret);
       }
     }
+  }
+
+  @PluginMethod
+  public void requestPermissions(PluginCall call) {
+    // Ensure we have permissions
+    pluginRequestAllPermissions();
+
+    call.resolve();
   }
 
   @PluginMethod
