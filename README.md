@@ -39,7 +39,7 @@ npx cap sync
 | `stopForeground`  | bring the service back to the bacground                  | android     |
 
 
-## Usage
+## Usage (TS)
 
 ```ts
 import { Plugins } from '@capacitor/core';
@@ -47,19 +47,26 @@ const { BackgroundGeolocation } = Plugins;
 
 import { BgLocationEvent, BgGeolocationAccuracy } from "capacitor-background-geolocation";
 
+BackgroundGeolocation.addListener("onLocation", (location: BgLocationEvent) => {
+  console.log("Got new location", location);
+  // Put your logic here.
+});
+
 BackgroundGeolocation.initialize({
   notificationText: "Your app is running, tap to open.",
   notificationTitle: "App Running",
   updateInteval: 10000,
   requestedAccuracy: BgGeolocationAccuracy.HIGH_ACCURACY,
   // Small icon has to be in 'drawable' resources of your app
-  // if you does not provide it or it is not found a fallback icon will be used.
+  // if you does not provide one (or it is not found) a fallback icon will be used.
   smallIcon: "ic_small_icon",
 });
 
-BackgroundGeolocation.addListener("onLocation", (location: BgLocationEvent) => {
-  console.log("Got new location", location);
-  // Put your logic here.
+// You can optionally get notifyed about permissions
+BackgroundGeolocation.addListener("onPermissions", (data: BgPermissions) => {
+  console.log("BGLocation permissions:", location);
+
+  // Do something with data
 });
 
 ```

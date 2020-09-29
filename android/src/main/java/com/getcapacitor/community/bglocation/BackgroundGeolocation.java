@@ -38,6 +38,8 @@ public class BackgroundGeolocation extends Plugin {
   // Tracks the bound state of the service.
   private boolean mBound = false;
   private boolean initialized = false;
+  private boolean foregroundPermission = false;
+  private boolean locationPermission = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -85,20 +87,40 @@ public class BackgroundGeolocation extends Plugin {
   protected void handleRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     super.handleRequestPermissionsResult(requestCode, permissions, grantResults);
 
-    for(int result : grantResults) {
-      if (result == PackageManager.PERMISSION_DENIED) {
-        return;
+    for(int i = 0; i < Math.min(permissions.length, grantResults.length); i++) {
+      switch (permissions[i]) {
+
+        case Manifest.permission.FOREGROUND_SERVICE:
+          // No need for FOREGROUND_SERVICE permission before Android 9 (see https://developer.android.com/about/versions/pie/android-9.0-changes-28#fg-svc)
+          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+            this.foregroundPermission = true;
+          }
+          break;
+
+        case Manifest.permission.ACCESS_FINE_LOCATION:
+          if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+            this.locationPermission = true;
+          }
+          break;
       }
     }
 
-    // Permission was granted.
-    Log.d(TAG, "User granted permissions, starting service...");
+    // Let frontend know about permissions.
+    JSObject ret = new JSObject();
+    ret.put("foreground", this.foregroundPermission);
+    ret.put("fineLocation", this.locationPermission);
+    notifyListeners("onPermissions", ret);
 
-    // Actual start
-    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
-    intent.setAction(LocationUpdatesService.ACTION_START);
-    getContext().startService(intent);
+    // If we have permissions we can start the service.
+    if (this.locationPermission) {
+      // Permission was granted.
+      Log.d(TAG, "User granted permissions, starting service...");
 
+      // Actual start
+      Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_START);
+      getContext().startService(intent);
+    }
   }
 
   /**
@@ -140,6 +162,14 @@ public class BackgroundGeolocation extends Plugin {
   }
 
   @PluginMethod
+  public void requestPermissions(PluginCall call) {
+    // Ensure we have permissions
+    pluginRequestAllPermissions();
+
+    call.resolve();
+  }
+
+  @PluginMethod
   public void initialize(PluginCall call) {
     if (initialized) {
       call.success();
@@ -167,8 +197,7 @@ public class BackgroundGeolocation extends Plugin {
       configIntent.putExtra("requestedAccuracy", call.getInt("requestedAccuracy"));
     getContext().startService(configIntent);
 
-    // Bind to the service. If the service is in foreground mode, this signals to the service
-    // that since this activity is in the foreground, the service can exit foreground mode.
+    // Bind to the service.
     getContext()
       .bindService(
         new Intent(getContext(), LocationUpdatesService.class),
@@ -185,6 +214,11 @@ public class BackgroundGeolocation extends Plugin {
   public void goForeground(PluginCall call) {
     if (!initialized) {
       call.error("Plugin in not initialized, call init first!");
+      return;
+    }
+
+    if (!this.foregroundPermission) {
+      call.error("Cannot start a foreground Service: permission denied.");
       return;
     }
 

@@ -70,21 +70,18 @@ public class LocationUpdatesService extends Service {
     mFusedLocationClient =
       LocationServices.getFusedLocationProviderClient(this);
 
-    mLocationCallback =
-      new LocationCallback() {
-
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-          super.onLocationResult(locationResult);
-          onNewLocation(locationResult.getLastLocation());
-        }
-      };
+    mLocationCallback = new LocationCallback() {
+      @Override
+      public void onLocationResult(LocationResult locationResult) {
+        super.onLocationResult(locationResult);
+        onNewLocation(locationResult.getLastLocation());
+      }
+    };
 
     HandlerThread handlerThread = new HandlerThread(TAG);
     handlerThread.start();
     mServiceHandler = new Handler(handlerThread.getLooper());
-    mNotificationManager =
-      (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
     // Android O requires a Notification Channel.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

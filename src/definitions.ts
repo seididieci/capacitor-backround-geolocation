@@ -47,3 +47,8 @@ export interface BgLocationEvent {
   time: number;
   provider: string;
 }
+
+export interface BgPermissions {
+  foreground: boolean;
+  fineLocation: boolean;
+}
