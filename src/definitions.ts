@@ -14,11 +14,49 @@ export const enum BgGeolocationAccuracy {
 }
 
 export interface BgGeolocationOptions {
-  notificationTitle: string;
-  notificationText: string;
+  /**
+   * Sets the title for Foreground service notification
+   *
+   * @type {string}
+   * @memberof BgGeolocationOptions
+   */
+  notificationTitle?: string;
+  /**
+   * Sets the text for the
+   *
+   * @type {string}
+   * @memberof BgGeolocationOptions
+   */
+  notificationText?: string;
+  /**
+   * Sets the requested interval for location updates.
+   *
+   * @type {number}
+   * @memberof BgGeolocationOptions
+   */
   updateInteval: number;
-  smallIcon: string;
+  /**
+   * Sets the small icon for the Foregroud service notification.
+   * The icon name you set must be in 'drawable' resources of your app
+   * if you does not provide one (or it is not found) a fallback icon will be used.
+   * @type {string}
+   * @memberof BgGeolocationOptions
+   */
+  smallIcon?: string;
+  /**
+   * Sets the requested accuracy for geolocation position.
+   *
+   * @type {BgGeolocationAccuracy}
+   * @memberof BgGeolocationOptions
+   */
   requestedAccuracy: BgGeolocationAccuracy;
+  /**
+   * Start immediateli to get locations (you should register the handler before callig initialize)
+   *
+   * @type {boolean}
+   * @memberof BgGeolocationOptions
+   */
+  startImmediately?: boolean;
 }
 
 export interface BackgroundGeolocationPlugin {
@@ -26,6 +64,8 @@ export interface BackgroundGeolocationPlugin {
   goForeground(): Promise<void>;
   stopForeground(): Promise<void>;
   addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle;
+  start(): Promise<void>;
+  stop(): Promise<void>;
 }
 
 

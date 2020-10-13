@@ -11,6 +11,10 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
 
   private updateInterval: number = 10000;
   private requestedAccuracy: BgGeolocationAccuracy = BgGeolocationAccuracy.HIGH_ACCURACY;
+  private watchListners: ListenerCallback[] = [];
+  private watchId: number = -1;
+  private initialized: boolean = false;
+
   private get geoOpts() {
     return {
       enableHighAccuracy: this.requestedAccuracy === BgGeolocationAccuracy.BALANCED_POWER_ACCURACY ||
@@ -20,29 +24,27 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
     };
   }
 
-  initialize(options: BgGeolocationOptions): Promise<void> {
+  public initialize(options: BgGeolocationOptions): Promise<void> {
+    if (this.initialized)
+      return Promise.resolve();
+
+    this.initialized = true;
+
     // Nothing to do on web
     this.updateInterval = options.updateInteval;
     this.requestedAccuracy = options.requestedAccuracy;
+
+    if (options.startImmediately)
+      this.start();
+
     return Promise.resolve();
   }
 
-  goForeground(): Promise<void> {
-    // Nothing to do on web
-    return Promise.resolve();
-  }
-
-  stopForeground(): Promise<void> {
-    // Nothing to do on web
-    return Promise.resolve();
-  }
-
-  addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle {
-
-    if (eventName.localeCompare('onLocation') === 0) {
-      // This is a violation of "Only request geolocation information in response to a user gesture." if listner is added out of a user interaction event
-      // But on Native plugin this is not necessary...
-      const watchId = window.navigator.geolocation.watchPosition((pos) => {
+  public start(): Promise<void> {
+    // This may throw a violation of "Only request geolocation information in response to a user gesture" if start is called out of an user interaction event
+    // On Native platform this is not the case...
+    this.watchId = window.navigator.geolocation.watchPosition((pos) => {
+      for (const listenerFunc of this.watchListners) {
         listenerFunc({
           altitude: pos.coords.altitude,
           altitudeAccuracy: pos.coords.altitudeAccuracy,
@@ -56,12 +58,38 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
           speedAccuracy: 0,
           time: pos.timestamp
         } as BgLocationEvent);
-      }, (err) => {
-        console.warn(err);
-      }, this.geoOpts);
+      }
+    }, (err) => {
+      console.warn(err);
+    }, this.geoOpts);
+
+    return Promise.resolve();
+  }
+
+  public stop(): Promise<void> {
+    window.navigator.geolocation.clearWatch(this.watchId);
+    return Promise.resolve();
+  }
+
+  public goForeground(): Promise<void> {
+    // Nothing to do on web
+    return Promise.resolve();
+  }
+
+  public stopForeground(): Promise<void> {
+    // Nothing to do on web
+    return Promise.resolve();
+  }
+
+  public addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle {
+
+    if (eventName.localeCompare('onLocation') === 0) {
+
+      this.watchListners.push(listenerFunc);
+
       return {
         remove: () => {
-          window.navigator.geolocation.clearWatch(watchId);
+          this.watchListners.splice(this.watchListners.indexOf(listenerFunc), 1);
         }
       };
     }
