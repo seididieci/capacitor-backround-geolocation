@@ -40,6 +40,7 @@ public class BackgroundGeolocation extends Plugin {
   private boolean initialized = false;
   private boolean foregroundPermission = false;
   private boolean locationPermission = false;
+  private boolean startRequested = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -111,8 +112,8 @@ public class BackgroundGeolocation extends Plugin {
     ret.put("fineLocation", this.locationPermission);
     notifyListeners("onPermissions", ret);
 
-    // If we have permissions we can start the service.
-    if (this.locationPermission) {
+    // If we have permissions we can start the service if requested and initialized.
+    if (this.locationPermission && this.initialized && this.startRequested) {
       // Permission was granted.
       Log.d(TAG, "User granted permissions, starting service...");
 
@@ -176,7 +177,13 @@ public class BackgroundGeolocation extends Plugin {
       return;
     }
 
+    initialized = true;
+
     receiver = new GeolocationReceiver();
+
+    // Setting this before requesting permissions
+    if (call.hasOption("startImmediately"))
+      this.startRequested = call.getBoolean("startImmediately");
 
     // Ensure we have permissions
     pluginRequestAllPermissions();
@@ -205,7 +212,30 @@ public class BackgroundGeolocation extends Plugin {
         Context.BIND_AUTO_CREATE
       );
 
-    initialized = true;
+    call.success();
+  }
+
+  @PluginMethod
+  public void start(PluginCall call) {
+    if (!initialized) {
+      call.error("Plugin in not initialized, call init first!");
+      return;
+    }
+
+    // Plugin user is forcing foreground mode
+    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.setAction(LocationUpdatesService.ACTION_START);
+    getContext().startService(intent);
+
+    call.success();
+  }
+
+  @PluginMethod
+  public void stop(PluginCall call) {
+    // Plugin user is forcing foreground mode
+    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.setAction(LocationUpdatesService.ACTION_STOP);
+    getContext().startService(intent);
 
     call.success();
   }

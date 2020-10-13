@@ -110,7 +110,6 @@ public class LocationUpdatesService extends Service {
           case ACTION_START:
             Log.d(TAG, "Location service started.");
             createLocationRequest();
-            getLastLocation();
             requestLocationUpdates();
             break;
           case ACTION_GO_FOREGROUND:
@@ -202,6 +201,8 @@ public class LocationUpdatesService extends Service {
   }
 
   public void requestLocationUpdates() {
+    getLastLocation();
+
     Log.d(TAG, "Requesting location updates");
     Utils.setRequestingLocation(this);
     startService(
