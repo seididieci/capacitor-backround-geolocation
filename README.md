@@ -36,12 +36,14 @@ npx cap sync
 | method           | info                                                     | platform    |
 | ---------------- | -------------------------------------------------------- | ----------- |
 | `initialize`     | initialize/start service and configure                   | web/android |
+| `start`          | starts the service getting location updates              | web/android |
+| `stop`           | stops the service getting location updates               | web/android |
 | `goForeground`   | bring the service on foreground (showing a notification) | android     |
 | `stopForeground` | bring the service back to the bacground                  | android     |
 
 ## Usage steps (TypeScript)
 
-### Import plugin an types
+### Import plugin and types
 
 ```ts
 import { Plugins } from '@capacitor/core';
@@ -87,7 +89,7 @@ BackgroundGeolocation.addListener('onPermissions', (data: BgPermissions) => {
 });
 ```
 
-### Start and stopp getting location updates
+### Start and stop getting location updates
 ```ts
 // Start getting location updates
 BackgroundGeolocation.start();
@@ -107,7 +109,7 @@ BackgroundGeolocation.goFroreground();
 BackgroundGeolocation.stopForeground();
 
 ```
-Keep in mind that the plugin will send the service in the foreground when your APP is going into bacground until you stop the service or quit the APP.
+Keep in mind that the plugin will send the service in the foreground when your APP is going into background until you stop the service or quit the APP.
 
 ### Android
 
@@ -132,12 +134,8 @@ Keep in mind that the plugin will send the service in the foreground when your A
 
 ### iOS
 
-This plugin is not yet implemented iOS side, if you want to help I will appreciate it...
+This plugin is not yet implemented iOS side, if someone wants to help I will appreciate it...
 
 ## License
 
-MIT
-
-```
-
-```
+capacitor-background-geolocation is 100% free and open-source, under the [MIT license](LICENSE). Use it however you want.
