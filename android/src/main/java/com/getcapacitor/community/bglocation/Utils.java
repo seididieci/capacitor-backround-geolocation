@@ -29,12 +29,13 @@ class Utils {
       .getBoolean(IS_REQUESTING_LOCATION, false);
   }
 
-  public static int getResourseId(Context context, String pVariableName, String pResourcename, String pPackageName) throws RuntimeException {
-    try {
-      return context.getResources().getIdentifier(pVariableName, pResourcename, pPackageName);
-    } catch (Exception e) {
-      throw new RuntimeException("Error getting Resource ID.", e);
-    }
-  }
+  // This is not used anymore
+  // public static int getResourceId(Context context, String pVariableName, String pResourcename, String pPackageName) throws RuntimeException {
+  //   try {
+  //     return context.getResources().getIdentifier(pVariableName, pResourcename, pPackageName);
+  //   } catch (Exception e) {
+  //     throw new RuntimeException("Error getting Resource ID.", e);
+  //   }
+  // }
 
 }

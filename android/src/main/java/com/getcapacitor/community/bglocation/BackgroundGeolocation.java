@@ -40,6 +40,9 @@ public class BackgroundGeolocation extends Plugin {
   private boolean initialized = false;
   private boolean foregroundPermission = false;
   private boolean locationPermission = false;
+  private boolean startRequested = false;
+  private boolean forceForeground = false;
+  private boolean appInBackground = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -65,6 +68,8 @@ public class BackgroundGeolocation extends Plugin {
 
   @Override
   protected void handleOnStop() {
+    this.appInBackground = true;
+
     // When the applications goes background we go foreground to keep getting data
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
@@ -72,12 +77,25 @@ public class BackgroundGeolocation extends Plugin {
   }
 
   @Override
+  protected void handleOnResume() {
+    this.appInBackground = false;
+
+    if (!this.forceForeground) {
+      // When the applications is resumed if foreground is not forced we put the service background again
+      Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_GO_BACKGROUND);
+      getContext().startService(intent);
+    }
+  }
+
+  @Override
   protected void handleOnDestroy() {
     // UnBind to the service.
     getContext().unbindService(mServiceConnection);
 
-    // When app gets destroyed we stop the service.
+    // When app gets destroyed we stop and kill the service.
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.putExtra("destroying", true);
     intent.setAction(LocationUpdatesService.ACTION_STOP);
     getContext().startService(intent);
 
@@ -111,8 +129,8 @@ public class BackgroundGeolocation extends Plugin {
     ret.put("fineLocation", this.locationPermission);
     notifyListeners("onPermissions", ret);
 
-    // If we have permissions we can start the service.
-    if (this.locationPermission) {
+    // If we have permissions we can start the service if requested and initialized.
+    if (this.locationPermission && this.initialized && this.startRequested) {
       // Permission was granted.
       Log.d(TAG, "User granted permissions, starting service...");
 
@@ -176,7 +194,13 @@ public class BackgroundGeolocation extends Plugin {
       return;
     }
 
+    initialized = true;
+
     receiver = new GeolocationReceiver();
+
+    // Setting this before requesting permissions
+    if (call.hasOption("startImmediately"))
+      this.startRequested = call.getBoolean("startImmediately");
 
     // Ensure we have permissions
     pluginRequestAllPermissions();
@@ -205,7 +229,37 @@ public class BackgroundGeolocation extends Plugin {
         Context.BIND_AUTO_CREATE
       );
 
-    initialized = true;
+    call.success();
+  }
+
+  @PluginMethod
+  public void start(PluginCall call) {
+    if (!initialized) {
+      call.error("Plugin in not initialized, call init first!");
+      return;
+    }
+
+    // Plugin user is requesting to start location update service
+    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.setAction(LocationUpdatesService.ACTION_START);
+    getContext().startService(intent);
+
+    // Resume sevice foreground state
+    if (appInBackground || forceForeground) {
+      Intent bgIntent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
+      getContext().startService(intent);
+    }
+
+    call.success();
+  }
+
+  @PluginMethod
+  public void stop(PluginCall call) {
+    // Plugin user is requesting to stop location update service
+    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.setAction(LocationUpdatesService.ACTION_STOP);
+    getContext().startService(intent);
 
     call.success();
   }
@@ -222,6 +276,8 @@ public class BackgroundGeolocation extends Plugin {
       return;
     }
 
+    this.forceForeground = true;
+
     // Plugin user is forcing foreground mode
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
@@ -236,6 +292,8 @@ public class BackgroundGeolocation extends Plugin {
       call.error("Plugin in not initialized, call init first!");
       return;
     }
+
+    this.forceForeground = false;
 
     // Plugin user forcing exiting foreground mode
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
