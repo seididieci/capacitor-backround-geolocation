@@ -41,6 +41,7 @@ public class BackgroundGeolocation extends Plugin {
   private boolean foregroundPermission = false;
   private boolean locationPermission = false;
   private boolean startRequested = false;
+  private boolean forceForeground = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -70,6 +71,16 @@ public class BackgroundGeolocation extends Plugin {
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
     getContext().startService(intent);
+  }
+
+  @Override
+  protected void handleOnResume() {
+    if (!this.forceForeground) {
+      // When the applications is resumed if foreground is not forced we put the service background again
+      Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_GO_BACKGROUND);
+      getContext().startService(intent);
+    }
   }
 
   @Override
@@ -223,6 +234,7 @@ public class BackgroundGeolocation extends Plugin {
     }
 
     // Plugin user is forcing foreground mode
+    // Plugin user is requesting to start location update service
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_START);
     getContext().startService(intent);
@@ -233,6 +245,7 @@ public class BackgroundGeolocation extends Plugin {
   @PluginMethod
   public void stop(PluginCall call) {
     // Plugin user is forcing foreground mode
+    // Plugin user is requesting to stop location update service
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_STOP);
     getContext().startService(intent);
@@ -252,6 +265,8 @@ public class BackgroundGeolocation extends Plugin {
       return;
     }
 
+    this.forceForeground = true;
+
     // Plugin user is forcing foreground mode
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
@@ -266,6 +281,8 @@ public class BackgroundGeolocation extends Plugin {
       call.error("Plugin in not initialized, call init first!");
       return;
     }
+
+    this.forceForeground = false;
 
     // Plugin user forcing exiting foreground mode
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
