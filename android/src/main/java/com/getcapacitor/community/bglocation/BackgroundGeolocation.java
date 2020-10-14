@@ -93,8 +93,9 @@ public class BackgroundGeolocation extends Plugin {
     // UnBind to the service.
     getContext().unbindService(mServiceConnection);
 
-    // When app gets destroyed we stop the service.
+    // When app gets destroyed we stop and kill the service.
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+    intent.putExtra("destroying", true);
     intent.setAction(LocationUpdatesService.ACTION_STOP);
     getContext().startService(intent);
 

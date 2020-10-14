@@ -113,9 +113,11 @@ public class LocationUpdatesService extends Service {
             requestLocationUpdates();
             break;
           case ACTION_GO_FOREGROUND:
-            if (!serviceIsRunningInForeground(this)) {
-              Log.d(TAG, "Location service going foreground.");
-              startForeground(NOTIFICATION_ID, getNotification());
+            if (Utils.isRequestingLocation(this)) {
+              if (!serviceIsRunningInForeground(this)) {
+                Log.d(TAG, "Location service going foreground.");
+                startForeground(NOTIFICATION_ID, getNotification());
+              }
             }
             break;
           case ACTION_GO_BACKGROUND:
@@ -124,8 +126,14 @@ public class LocationUpdatesService extends Service {
             break;
           case ACTION_STOP:
             Log.d(TAG, "Location service stopped.");
-            removeLocationUpdates();
-            stopSelf();
+            stopForeground(true);
+            if (Utils.isRequestingLocation(this)) {
+              removeLocationUpdates();
+            }
+            boolean destroying = intent.getBooleanExtra("destroying", false);
+            if (destroying) {
+              stopSelf();
+            }
             break;
           case ACTION_CONFIGURE:
             Log.d(TAG, "Location service update changed.");
@@ -134,7 +142,7 @@ public class LocationUpdatesService extends Service {
             int newInterval = intent.getIntExtra("updateInterval", updateInterval);
             String newTitle = intent.getStringExtra("notificationTitle");
             String newText = intent.getStringExtra("notificationText");
-            int newSmallIcon = intent.getIntExtra("smallIcon", R.drawable.ic_baseline_location_on_24);
+            int newSmallIcon = intent.getIntExtra("smallIcon", smallIconResourceID);
             int newAccuracy = intent.getIntExtra("requestedAccuracy", requestedAccuracy);
 
             // Verifying what changes
