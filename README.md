@@ -5,6 +5,7 @@
 </p>
 
 [![npm version](https://badge.fury.io/js/capacitor-background-geolocation.svg)](https://badge.fury.io/js/capacitor-background-geolocation)
+![NPM Publish](https://github.com/seididieci/capacitor-backround-geolocation/workflows/NPM%20Publish/badge.svg)
 
 ## Maintainers
 
