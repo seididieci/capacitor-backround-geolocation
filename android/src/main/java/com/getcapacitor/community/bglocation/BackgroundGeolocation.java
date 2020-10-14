@@ -42,6 +42,7 @@ public class BackgroundGeolocation extends Plugin {
   private boolean locationPermission = false;
   private boolean startRequested = false;
   private boolean forceForeground = false;
+  private boolean appInBackground = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -67,6 +68,8 @@ public class BackgroundGeolocation extends Plugin {
 
   @Override
   protected void handleOnStop() {
+    this.appInBackground = true;
+
     // When the applications goes background we go foreground to keep getting data
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
@@ -75,6 +78,8 @@ public class BackgroundGeolocation extends Plugin {
 
   @Override
   protected void handleOnResume() {
+    this.appInBackground = false;
+
     if (!this.forceForeground) {
       // When the applications is resumed if foreground is not forced we put the service background again
       Intent intent = new Intent(getContext(), LocationUpdatesService.class);
@@ -233,18 +238,23 @@ public class BackgroundGeolocation extends Plugin {
       return;
     }
 
-    // Plugin user is forcing foreground mode
     // Plugin user is requesting to start location update service
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_START);
     getContext().startService(intent);
+
+    // Resume sevice foreground state
+    if (appInBackground || forceForeground) {
+      Intent bgIntent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
+      getContext().startService(intent);
+    }
 
     call.success();
   }
 
   @PluginMethod
   public void stop(PluginCall call) {
-    // Plugin user is forcing foreground mode
     // Plugin user is requesting to stop location update service
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_STOP);
