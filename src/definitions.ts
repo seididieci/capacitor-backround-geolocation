@@ -60,11 +60,54 @@ export interface BgGeolocationOptions {
 }
 
 export interface BackgroundGeolocationPlugin {
+  /**
+   * Plugin initialization. This is required before you can start receiving location data.
+   *
+   * @param {BgGeolocationOptions} options
+   * @returns {Promise<void>}
+   * @memberof BackgroundGeolocationPlugin
+   */
   initialize(options: BgGeolocationOptions): Promise<void>;
+  /**
+   * Make the service run in foreground (starts a Notification on android).
+   * This is automatically done when your APP goes on background so it will
+   * not stop getting location updates
+   *
+   * @returns {Promise<void>}
+   * @memberof BackgroundGeolocationPlugin
+   */
   goForeground(): Promise<void>;
+  /**
+   * Make the service stop working in foreground.
+   * If your APP is running background will stop getting regular location updates
+   *
+   * @returns {Promise<void>}
+   * @memberof BackgroundGeolocationPlugin
+   */
   stopForeground(): Promise<void>;
+  /**
+   * Adds a listner to Plugin events
+   *
+   * @param {string} eventName
+   * @param {ListenerCallback} listenerFunc
+   * @returns {PluginListenerHandle}
+   * @memberof BackgroundGeolocationPlugin
+   */
   addListener(eventName: string, listenerFunc: ListenerCallback): PluginListenerHandle;
+  /**
+   * Starts the service getting location updates.
+   *
+   * @returns {Promise<void>}
+   * @memberof BackgroundGeolocationPlugin
+   */
   start(): Promise<void>;
+  /**
+   * Stops the service to get location updates. If the service is running forregroud,
+   * maybe you will keep seeing the notification until you call stopForeground()
+   *
+   * @returns {Promise<void>}
+   * @memberof BackgroundGeolocationPlugin
+   */
   stop(): Promise<void>;
 }
 
