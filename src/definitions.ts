@@ -6,7 +6,7 @@ declare module '@capacitor/core' {
   }
 }
 
-export const enum BgGeolocationAccuracy {
+export enum BgGeolocationAccuracy {
   HIGH_ACCURACY = 100,
   BALANCED_POWER_ACCURACY = 102,
   LOW_POWER = 104,
