@@ -1,6 +1,6 @@
 {
   "name": "capacitor-background-geolocation",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A native plugin to get geolocation updates also when app is in background",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",

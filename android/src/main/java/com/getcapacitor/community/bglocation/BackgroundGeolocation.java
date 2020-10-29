@@ -43,6 +43,7 @@ public class BackgroundGeolocation extends Plugin {
   private boolean startRequested = false;
   private boolean forceForeground = false;
   private boolean appInBackground = false;
+  private boolean serviceRunning = false;
 
   // Monitors the state of the connection to the service.
   private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -68,23 +69,26 @@ public class BackgroundGeolocation extends Plugin {
 
   @Override
   protected void handleOnStop() {
-    this.appInBackground = true;
-
-    // When the applications goes background we go foreground to keep getting data
-    Intent intent = new Intent(getContext(), LocationUpdatesService.class);
-    intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
-    getContext().startService(intent);
+    if (this.serviceRunning) {
+      this.appInBackground = true;
+      // When the applications goes background we go foreground to keep getting data
+      Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+      intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
+      getContext().startService(intent);
+    }
   }
 
   @Override
   protected void handleOnResume() {
-    this.appInBackground = false;
+    if (this.appInBackground) {
+      this.appInBackground = false;
 
-    if (!this.forceForeground) {
-      // When the applications is resumed if foreground is not forced we put the service background again
-      Intent intent = new Intent(getContext(), LocationUpdatesService.class);
-      intent.setAction(LocationUpdatesService.ACTION_GO_BACKGROUND);
-      getContext().startService(intent);
+      if (!this.forceForeground) {
+        // When the applications is resumed if foreground is not forced we put the service background again
+        Intent intent = new Intent(getContext(), LocationUpdatesService.class);
+        intent.setAction(LocationUpdatesService.ACTION_GO_BACKGROUND);
+        getContext().startService(intent);
+      }
     }
   }
 
@@ -135,6 +139,7 @@ public class BackgroundGeolocation extends Plugin {
       Log.d(TAG, "User granted permissions, starting service...");
 
       // Actual start
+      this.serviceRunning = true;
       Intent intent = new Intent(getContext(), LocationUpdatesService.class);
       intent.setAction(LocationUpdatesService.ACTION_START);
       getContext().startService(intent);
@@ -235,17 +240,18 @@ public class BackgroundGeolocation extends Plugin {
   @PluginMethod
   public void start(PluginCall call) {
     if (!initialized) {
-      call.error("Plugin in not initialized, call init first!");
+      call.error("Plugin in not initialized, try to call initialize() first.");
       return;
     }
 
     // Plugin user is requesting to start location update service
+    this.serviceRunning = true;
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_START);
     getContext().startService(intent);
 
     // Resume sevice foreground state
-    if (appInBackground || forceForeground) {
+    if (this.appInBackground || this.forceForeground) {
       Intent bgIntent = new Intent(getContext(), LocationUpdatesService.class);
       intent.setAction(LocationUpdatesService.ACTION_GO_FOREGROUND);
       getContext().startService(intent);
@@ -257,6 +263,7 @@ public class BackgroundGeolocation extends Plugin {
   @PluginMethod
   public void stop(PluginCall call) {
     // Plugin user is requesting to stop location update service
+    this.serviceRunning = false;
     Intent intent = new Intent(getContext(), LocationUpdatesService.class);
     intent.setAction(LocationUpdatesService.ACTION_STOP);
     getContext().startService(intent);
@@ -267,12 +274,17 @@ public class BackgroundGeolocation extends Plugin {
   @PluginMethod
   public void goForeground(PluginCall call) {
     if (!initialized) {
-      call.error("Plugin in not initialized, call init first!");
+      call.error("Plugin in not initialized, try to call initialize() first.");
       return;
     }
 
     if (!this.foregroundPermission) {
-      call.error("Cannot start a foreground Service: permission denied.");
+      call.error("Cannot start a foreground Service: user denied FOREGROUND permissions.");
+      return;
+    }
+
+    if (!this.serviceRunning) {
+      call.error("Cannot send service to foreground: it is not started. Try to call start() before.");
       return;
     }
 
@@ -289,7 +301,12 @@ public class BackgroundGeolocation extends Plugin {
   @PluginMethod
   public void stopForeground(PluginCall call) {
     if (!initialized) {
-      call.error("Plugin in not initialized, call init first!");
+      call.error("Plugin in not initialized, try to call initialize() first.");
+      return;
+    }
+
+    if (!this.serviceRunning) {
+      call.success();
       return;
     }
 
