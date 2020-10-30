@@ -312,12 +312,8 @@ public class LocationUpdatesService extends Service {
   }
 
   public boolean serviceIsRunningInForeground(Context context) {
-    ActivityManager manager = (ActivityManager) context.getSystemService(
-      Context.ACTIVITY_SERVICE
-    );
-    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(
-      Integer.MAX_VALUE
-    )) {
+    ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
       if (getClass().getName().equals(service.service.getClassName())) {
         if (service.foreground) {
           return true;

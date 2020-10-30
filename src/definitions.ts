@@ -34,7 +34,7 @@ export interface BgGeolocationOptions {
    * @type {number}
    * @memberof BgGeolocationOptions
    */
-  updateInteval: number;
+  updateInterval: number;
   /**
    * Sets the small icon for the Foregroud service notification.
    * The icon name you set must be in 'drawable' resources of your app
