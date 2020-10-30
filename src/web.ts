@@ -31,7 +31,7 @@ export class BackgroundGeolocationWeb extends WebPlugin implements BackgroundGeo
     this.initialized = true;
 
     // Nothing to do on web
-    this.updateInterval = options.updateInteval;
+    this.updateInterval = options.updateInterval;
     this.requestedAccuracy = options.requestedAccuracy;
 
     if (options.startImmediately)
