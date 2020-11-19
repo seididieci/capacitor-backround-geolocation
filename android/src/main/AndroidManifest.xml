@@ -1,12 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.getcapacitor.community.bglocation.capacitorbackgroundgeolocation">
 
-  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.getcapacitor.community.bglocation.capacitorbackgroundgeolocation">
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-      <application>
-      <service android:enabled="true" android:name="com.getcapacitor.community.bglocation.LocationUpdatesService" />
-      </application>
-  </manifest>
-  
+  <application>
+    <service android:enabled="true" android:name="com.getcapacitor.community.bglocation.LocationUpdatesService" />
+  </application>
+</manifest>
