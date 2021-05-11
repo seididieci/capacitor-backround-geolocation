@@ -1,6 +1,6 @@
 {
   "name": "capacitor-background-geolocation",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A native plugin to get geolocation updates also when app is in background",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
@@ -20,22 +20,22 @@
   "author": "seididieci",
   "license": "MIT",
   "devDependencies": {
-    "@capacitor/android": "^2.4.0",
-    "@capacitor/core": "^2.4.0",
-    "@capacitor/ios": "^2.4.0",
-    "@ionic/prettier-config": "^1.0.0",
-    "@ionic/swiftlint-config": "^1.0.0",
-    "@rollup/plugin-node-resolve": "^8.1.0",
-    "lodash": "^4.17.19",
-    "prettier": "^2.0.5",
-    "prettier-plugin-java": "^0.8.0",
+    "@capacitor/android": "^2.4.7",
+    "@capacitor/core": "^2.4.7",
+    "@capacitor/ios": "^2.4.7",
+    "@ionic/prettier-config": "^1.0.1",
+    "@ionic/swiftlint-config": "^1.1.2",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "lodash": ">=4.17.21",
+    "prettier": "^2.3.0",
+    "prettier-plugin-java": "^1.0.2",
     "rimraf": "^3.0.2",
-    "rollup": "^2.23.0",
+    "rollup": "^2.47.0",
     "swiftlint": "^1.0.1",
-    "typescript": "^3.8.3"
+    "typescript": "^4.2.4"
   },
   "peerDependencies": {
-    "@capacitor/core": "^2.4.0"
+    "@capacitor/core": "^2.4.7"
   },
   "files": [
     "dist/",
