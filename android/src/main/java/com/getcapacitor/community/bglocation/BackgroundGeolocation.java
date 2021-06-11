@@ -25,7 +25,7 @@ import com.getcapacitor.PluginMethod;
   permissions = {
     Manifest.permission.FOREGROUND_SERVICE,
     Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+    // Manifest.permission.ACCESS_BACKGROUND_LOCATION,
   },
   permissionRequestCode = 86 // Used in checking for runtime permissions.
 )
