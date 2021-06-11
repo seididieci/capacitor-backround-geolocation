@@ -1,4 +1,4 @@
-import { ListenerCallback, PluginListenerHandle } from "@capacitor/core";
+import { ListenerCallback, PluginListenerHandle, WebPlugin } from "@capacitor/core";
 
 declare module '@capacitor/core' {
   interface PluginRegistry {
@@ -59,7 +59,7 @@ export interface BgGeolocationOptions {
   startImmediately?: boolean;
 }
 
-export interface BackgroundGeolocationPlugin {
+export interface BackgroundGeolocationPlugin extends WebPlugin {
   /**
    * Plugin initialization. This is required before you can start receiving location data.
    *
