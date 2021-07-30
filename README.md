@@ -1,7 +1,7 @@
 <h3 align="center">Capacitor Background Geolocation</h3>
 <p align="center"><strong><code>capacitor-background-geolocation</code></strong></p>
 <p align="center">
-  Capacitor plugin for enabling bacground geolocation service
+  Capacitor plugin for enabling background geolocation service
 </p>
 
 [![npm version](https://badge.fury.io/js/capacitor-background-geolocation.svg)](https://badge.fury.io/js/capacitor-background-geolocation)
@@ -64,7 +64,18 @@ BackgroundGeolocation.addListener('onLocation', (location: BgLocationEvent) => {
 });
 ```
 
-### Configure plugin settings (required)
+### Start getting location updata after user accept permissions
+```ts
+BackgroundGeolocation.addListener('onPermissions', (data: BgPermissions) => {
+  console.log('BGLocation permissions:', location);
+
+  // Start geolocation if user grnated permisiions
+  if (data.fineLocation)
+    BackgroundGeolocation.start();
+});
+```
+
+### Initialize the plugin settings (required)
 
 ```ts
 BackgroundGeolocation.initialize({
@@ -79,33 +90,24 @@ BackgroundGeolocation.initialize({
   startImmediately: true,
 });
 ```
-
-### Getting notified about permission results
+### Request permissions to user
 ```ts
-BackgroundGeolocation.addListener('onPermissions', (data: BgPermissions) => {
-  console.log('BGLocation permissions:', location);
-
-  // Do something with data
-});
+// After user accept permissions the handler above will start the service
+BackgroundGeolocation.requestPermissions();
 ```
 
-### Start and stop getting location updates
+### Evnetually stop getting location updates when done
 ```ts
-// Start getting location updates
-BackgroundGeolocation.start();
-
-// Stop getting location updates
 BackgroundGeolocation.stop();
-
 ```
 
 ### Control background/foreground behaviour
 ```ts
 // Force the service to run in foreground
-// It will show the android icon also when your app is up and running
+// It will show the android notification also when your app is up and running
 BackgroundGeolocation.goFroreground();
 
-// Restore the service to run in backgroud/default mode: the android icon will be shown when your app is in background.
+// Restore the service to run in backgroud/default mode: the android notification will be shown only when your app goes in background.
 BackgroundGeolocation.stopForeground();
 
 ```
@@ -131,6 +133,8 @@ Keep in mind that the plugin will send the service in the foreground when your A
 >   add(BackgroundGeolocation.class);
 > }});
 > ```
+>The `AndroidManifest.xml` should be automaticcaly filled with the right permissions through a `cap sync` command but sometimes it doesn't...<br/>
+>Check that there are `FOREGROUND_SERVICE` and `ACCESS_FINE_LOCATION` permissions. in your App Manifest.
 
 ### iOS
 
