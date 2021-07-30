@@ -64,12 +64,12 @@ BackgroundGeolocation.addListener('onLocation', (location: BgLocationEvent) => {
 });
 ```
 
-### Start getting location updata after user accept permissions
+### Start service after the user accept permissions (through Android popup)
 ```ts
 BackgroundGeolocation.addListener('onPermissions', (data: BgPermissions) => {
   console.log('BGLocation permissions:', location);
 
-  // Start geolocation if user grnated permisiions
+  // Start geolocation if user granted location permisiions
   if (data.fineLocation)
     BackgroundGeolocation.start();
 });
