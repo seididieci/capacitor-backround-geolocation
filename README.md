@@ -84,7 +84,7 @@ BackgroundGeolocation.initialize({
   updateInteval: 10000,
   requestedAccuracy: BgGeolocationAccuracy.HIGH_ACCURACY,
   // Small icon has to be in 'drawable' resources of your app
-  // if you does not provide one (or it is not found) a fallback icon will be used.
+  // if you don't provide one (or it is not found) a fallback icon will be used.
   smallIcon: 'ic_small_icon',
   // Start getting location updates right away. You can set this to false or not set at all (se below).
   startImmediately: true,
